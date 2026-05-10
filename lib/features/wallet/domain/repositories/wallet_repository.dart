@@ -31,4 +31,10 @@ abstract class WalletRepository {
 
   /// Mark onboarding finished so the app shell can be shown.
   Future<void> markOnboardingComplete();
+
+  /// Verifies the wallet PIN against the stored hash (or legacy mnemonic decrypt).
+  Future<bool> verifyPin(String pin);
+
+  /// Decrypts the stored mnemonic when [pin] is correct.
+  Future<String?> unlockMnemonic(String pin);
 }

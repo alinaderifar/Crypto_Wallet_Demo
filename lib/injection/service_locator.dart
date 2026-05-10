@@ -16,6 +16,7 @@ import '../features/wallet/domain/repositories/chain_repository.dart';
 import '../features/wallet/domain/repositories/wallet_repository.dart';
 import '../features/wallet/domain/usecases/create_wallet.dart';
 import '../features/wallet/domain/usecases/import_wallet.dart';
+import '../features/wallet/domain/usecases/send_native_eth.dart';
 import '../features/wallet/presentation/bloc/chain_bloc.dart';
 import '../features/wallet/presentation/bloc/transaction_bloc.dart';
 import '../features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -36,25 +37,22 @@ Future<void> init() async {
 
   final walletLocalDataSource = WalletLocalDataSource();
   await walletLocalDataSource.init();
-  sl.registerLazySingleton<WalletLocalDataSource>(
-    () => walletLocalDataSource,
-  );
+  sl.registerLazySingleton<WalletLocalDataSource>(() => walletLocalDataSource);
 
   final chainRemoteDataSource = ChainRemoteDataSource();
-  sl.registerLazySingleton<ChainRemoteDataSource>(
-    () => chainRemoteDataSource,
-  );
+  sl.registerLazySingleton<ChainRemoteDataSource>(() => chainRemoteDataSource);
 
-  sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(),
-  );
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
 
   sl.registerLazySingleton<WalletRepository>(
     () => WalletRepositoryImpl(sl<WalletLocalDataSource>()),
   );
 
   sl.registerLazySingleton<ChainRepository>(
-    () => ChainRepositoryImpl(sl<ChainRemoteDataSource>()),
+    () => ChainRepositoryImpl(
+      sl<ChainRemoteDataSource>(),
+      sl<WalletLocalDataSource>(),
+    ),
   );
 
   sl.registerLazySingleton<CreateWallet>(
@@ -65,10 +63,15 @@ Future<void> init() async {
     () => ImportWallet(sl<WalletRepository>()),
   );
 
+  sl.registerLazySingleton<SendNativeEth>(
+    () => SendNativeEth(sl<WalletRepository>(), sl<ChainRepository>()),
+  );
+
   sl.registerFactory<AuthBloc>(
     () => AuthBloc(
       createWallet: sl<CreateWallet>(),
       importWallet: sl<ImportWallet>(),
+      walletRepository: sl<WalletRepository>(),
     ),
   );
 
@@ -81,10 +84,18 @@ Future<void> init() async {
   );
 
   sl.registerFactory<ChainBloc>(
-    () => ChainBloc(repository: sl<ChainRepository>()),
+    () => ChainBloc(
+      repository: sl<ChainRepository>(),
+      walletRepository: sl<WalletRepository>(),
+    ),
   );
 
-  sl.registerFactory<TransactionBloc>(() => TransactionBloc());
+  sl.registerFactory<TransactionBloc>(
+    () => TransactionBloc(
+      chainRepository: sl<ChainRepository>(),
+      walletRepository: sl<WalletRepository>(),
+    ),
+  );
 
   walletSessionNotifier.value = await sl<WalletRepository>().isSessionReady();
 

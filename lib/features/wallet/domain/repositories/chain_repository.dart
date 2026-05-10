@@ -13,16 +13,19 @@ abstract class ChainRepository {
   List<ChainConfig> get supportedChains;
 
   /// Get the balance for an address on the current chain.
-  Future<String> getBalance({
-    required String address,
-    ChainConfig? chain,
-  });
+  Future<String> getBalance({required String address, ChainConfig? chain});
 
   /// Send a transaction on the current chain.
   Future<TransactionResult> sendTransaction({
     required String from,
     required String to,
     required String value,
+    ChainConfig? chain,
+  });
+
+  /// Broadcasts a signed legacy EVM transaction (RLP hex including 0x).
+  Future<TransactionResult> broadcastSignedEvmTx({
+    required String signedTxHex,
     ChainConfig? chain,
   });
 
@@ -46,8 +49,5 @@ class TransactionResult {
   final String txHash;
   final String chainId;
 
-  const TransactionResult({
-    required this.txHash,
-    required this.chainId,
-  });
+  const TransactionResult({required this.txHash, required this.chainId});
 }

@@ -55,8 +55,8 @@ class _CreateWalletPageState extends State<CreateWalletPage> {
                 Text(
                   'Set a secure PIN to protect your wallet. This PIN will be\nrequired to authorize transactions.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 // PIN Field
@@ -202,14 +202,10 @@ class _CreateWalletPageState extends State<CreateWalletPage> {
       return;
     }
 
-    context.read<AuthBloc>().add(
-          AuthCreateWallet(
-            pin: _pinController.text,
-          ),
-        );
+    context.read<AuthBloc>().add(AuthCreateWallet(pin: _pinController.text));
   }
 
   void _navigateToBackup(BuildContext context) {
-    GoRouter.of(context).go('/onboarding/backup');
+    GoRouter.of(context).go('/onboarding/backup', extra: _pinController.text);
   }
 }

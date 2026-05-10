@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/features/wallet/domain/entities/chain_config.dart';
+import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_bloc.dart';
+import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_state.dart';
+import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/wallet_state.dart';
 
 class ReceivePage extends StatelessWidget {
   const ReceivePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Get actual address from wallet state
-    const displayAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Receive'),
@@ -23,29 +26,52 @@ class ReceivePage extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 24),
-              // QR code placeholder
-              Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Center(
-                  child: Icon(Icons.qr_code, size: 120, color: Colors.black87),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Address display with copy
-              _buildAddressCard(context, displayAddress),
-              const SizedBox(height: 24),
-              // Network info
-              _buildNetworkCard(context),
-            ],
+          child: BlocBuilder<WalletBloc, WalletState>(
+            builder: (context, w) {
+              return BlocBuilder<ChainBloc, ChainState>(
+                builder: (context, c) {
+                  final chain = c.selectedChain ?? ChainConfig.sepolia;
+                  final account = w.currentAccount;
+                  final address = account == null
+                      ? ''
+                      : account.addressForChain(chain.chainId);
+                  final ready = address.isNotEmpty;
+
+                  return Column(
+                    children: [
+                      const SizedBox(height: 24),
+                      Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.qr_code,
+                            size: 120,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (!ready)
+                        Text(
+                          'Wallet not loaded yet.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        )
+                      else ...[
+                        _buildAddressCard(context, address, chain.symbol),
+                        const SizedBox(height: 24),
+                        _buildNetworkCard(context, chain.name),
+                      ],
+                    ],
+                  );
+                },
+              );
+            },
           ),
         ),
       ),
@@ -53,23 +79,28 @@ class ReceivePage extends StatelessWidget {
   }
 
   Widget _buildAddressCard(
-      BuildContext context, String address) {
+    BuildContext context,
+    String address,
+    String symbol,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceLight.withOpacity(0.6)
-            : AppColors.surface.withOpacity(0.6),
+            ? AppColors.surfaceLight.withValues(alpha: 0.6)
+            : AppColors.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.2)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
-          Text('Your ${_chainSymbol()} Address',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textTertiary,
-                  )),
+          Text(
+            'Your $symbol Address',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textTertiary),
+          ),
           const SizedBox(height: 8),
           SelectableText(
             _truncateAddress(address),
@@ -101,26 +132,25 @@ class ReceivePage extends StatelessWidget {
     );
   }
 
-  Widget _buildNetworkCard(BuildContext context) {
+  Widget _buildNetworkCard(BuildContext context, String networkName) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded,
-              color: AppColors.primary, size: 20),
+          Icon(Icons.info_outline_rounded, color: AppColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Share this address only with trusted parties. Double-check the network before sending.',
+              'Network: $networkName. Share this address only with trusted parties.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
             ),
           ),
         ],
@@ -133,10 +163,5 @@ class ReceivePage extends StatelessWidget {
       return '${address.substring(0, 8)}...${address.substring(address.length - 6)}';
     }
     return address;
-  }
-
-  String _chainSymbol() {
-    // TODO: Get from ChainBloc
-    return 'ETH';
   }
 }

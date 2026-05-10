@@ -3,19 +3,24 @@ import '../../domain/entities/chain_config.dart';
 import '../../domain/entities/transaction.dart';
 import '../../domain/repositories/chain_repository.dart';
 import '../datasources/chain_remote_data_source.dart';
+import '../datasources/wallet_local_data_source.dart';
 
 /// Concrete implementation of ChainRepository using remote data sources.
 ///
 /// Handles blockchain interactions via RPC endpoints with automatic
 /// chain switching support.
 class ChainRepositoryImpl implements ChainRepository {
+  ChainRepositoryImpl(this._remoteDataSource, this._walletLocal)
+    : _selectedChain = _initialChain(_walletLocal);
+
   final ChainRemoteDataSource _remoteDataSource;
+  final WalletLocalDataSource _walletLocal;
   ChainConfig _selectedChain;
 
-  ChainRepositoryImpl(
-    this._remoteDataSource, {
-    ChainConfig? initialChain,
-  }) : _selectedChain = initialChain ?? ChainConfig.ethereumMainnet;
+  static ChainConfig _initialChain(WalletLocalDataSource local) {
+    final id = local.getSelectedChain();
+    return ChainConfig.fromChainId(id ?? '') ?? ChainConfig.sepolia;
+  }
 
   @override
   ChainConfig get selectedChain => _selectedChain;
@@ -25,6 +30,7 @@ class ChainRepositoryImpl implements ChainRepository {
     final chain = ChainConfig.fromChainId(chainId);
     if (chain == null) throw ChainNotSupportedException(chainId);
     _selectedChain = chain;
+    await _walletLocal.saveSelectedChain(chainId);
   }
 
   @override
@@ -48,10 +54,19 @@ class ChainRepositoryImpl implements ChainRepository {
     required String value,
     ChainConfig? chain,
   }) async {
+    throw UnsupportedError(
+      'Sign locally then use broadcastSignedEvmTx (see SendNativeEth use case).',
+    );
+  }
+
+  @override
+  Future<TransactionResult> broadcastSignedEvmTx({
+    required String signedTxHex,
+    ChainConfig? chain,
+  }) async {
     final targetChain = chain ?? _selectedChain;
-    // TODO: Build, sign, and broadcast transaction
     final txHash = await _remoteDataSource.sendSignedTransaction(
-      signedTx: 'signed_${DateTime.now().millisecondsSinceEpoch}',
+      signedTx: signedTxHex,
       chain: targetChain,
     );
     return TransactionResult(txHash: txHash, chainId: targetChain.chainId);
@@ -83,6 +98,3 @@ class ChainRepositoryImpl implements ChainRepository {
     );
   }
 }
-
-/// Global singleton — initialized during app startup.
-late ChainRepositoryImpl chainRepository;

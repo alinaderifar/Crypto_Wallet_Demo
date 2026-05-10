@@ -1,16 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/repositories/chain_repository.dart';
+import '../../domain/repositories/wallet_repository.dart';
 
 import 'chain_event.dart';
 import 'chain_state.dart';
 
 class ChainBloc extends Bloc<ChainEvent, ChainState> {
   final ChainRepository _repository;
+  final WalletRepository _walletRepository;
 
-  ChainBloc({required ChainRepository repository})
-      : _repository = repository,
-        super(ChainState(selectedChain: repository.selectedChain)) {
+  ChainBloc({
+    required ChainRepository repository,
+    required WalletRepository walletRepository,
+  }) : _repository = repository,
+       _walletRepository = walletRepository,
+       super(ChainState(selectedChain: repository.selectedChain)) {
     on<ChainChanged>(_onChainChanged);
     on<ChainRefreshRequested>(_onChainRefresh);
   }
@@ -21,15 +26,17 @@ class ChainBloc extends Bloc<ChainEvent, ChainState> {
   ) async {
     try {
       await _repository.setChain(event.chainId);
-      emit(state.copyWith(
-        selectedChain: _repository.selectedChain,
-        status: ChainStatus.success,
-      ));
+      emit(
+        state.copyWith(
+          selectedChain: _repository.selectedChain,
+          status: ChainStatus.success,
+          errorMessage: null,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(
-        status: ChainStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(status: ChainStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 
@@ -39,19 +46,31 @@ class ChainBloc extends Bloc<ChainEvent, ChainState> {
   ) async {
     emit(state.copyWith(status: ChainStatus.loading));
     try {
-      // TODO: Get wallet address from WalletBloc state
-      final balance = await _repository.getBalance(
-        address: 'current_wallet_address',
+      final account = await _walletRepository.getCurrentAccount();
+      if (account == null) {
+        emit(
+          state.copyWith(
+            status: ChainStatus.error,
+            errorMessage: 'No wallet account',
+          ),
+        );
+        return;
+      }
+      final chain = _repository.selectedChain;
+      final address = account.addressForChain(chain.chainId);
+      final balance = await _repository.getBalance(address: address);
+      emit(
+        state.copyWith(
+          status: ChainStatus.success,
+          selectedChain: chain,
+          currentBalance: balance,
+          errorMessage: null,
+        ),
       );
-      emit(state.copyWith(
-        status: ChainStatus.success,
-        currentBalance: balance,
-      ));
     } catch (e) {
-      emit(state.copyWith(
-        status: ChainStatus.error,
-        errorMessage: e.toString(),
-      ));
+      emit(
+        state.copyWith(status: ChainStatus.error, errorMessage: e.toString()),
+      );
     }
   }
 }

@@ -3,7 +3,11 @@ import 'package:equatable/equatable.dart';
 sealed class WalletEvent extends Equatable {
   const WalletEvent();
   @override
-  List<Object?> get props => [];
+  List<Object> get props => [];
+}
+
+class WalletLoadRequested extends WalletEvent {
+  const WalletLoadRequested();
 }
 
 class WalletCreateRequested extends WalletEvent {
@@ -16,10 +20,7 @@ class WalletCreateRequested extends WalletEvent {
 class WalletImportRequested extends WalletEvent {
   final String mnemonic;
   final String pin;
-  const WalletImportRequested({
-    required this.mnemonic,
-    required this.pin,
-  });
+  const WalletImportRequested({required this.mnemonic, required this.pin});
   @override
   List<Object> get props => [mnemonic, pin];
 }

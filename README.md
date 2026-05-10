@@ -1,6 +1,6 @@
 # Crypto Wallet Demo
 
-A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app structure. It implements real navigation, local persistence, and session routing; **chain balances, signing, and broadcasts are still stubs** unless you extend the data layer (see *Current limitations*).
+A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app structure. It implements real navigation, local persistence, and session routing. **Batch 2** adds BIP-39/BIP-32 address derivation, salted PIN hashing, real RPC reads (balance, fee estimate, tx history where a keyless explorer API exists), and **native EVM sends** (sign + `eth_sendRawTransaction`) on the selected EVM network (Sepolia by default). Treat as a demo, not audited wallet software (see *Current limitations*).
 
 **Version:** 0.1.0+1  
 **SDK:** Dart `>=3.8.0 <4.0.0`
@@ -14,15 +14,15 @@ A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app 
 | Flow | Behavior |
 |------|----------|
 | **Welcome** | Entry screen; routes to create or import wallet. |
-| **Create wallet** | PIN + terms → persists encrypted mnemonic in **Hive** via `WalletRepository` / `WalletLocalDataSource`; marks onboarding incomplete until verify step completes. |
+| **Create wallet** | PIN + terms → generates a **BIP-39** mnemonic, encrypts it in **Hive** via `WalletRepository` / `WalletLocalDataSource`, stores a **salted PIN hash**, derives ETH/SOL addresses (BIP-32 / Solana HD); marks onboarding incomplete until verify step completes. |
 | **Import wallet** | Mnemonic + PIN → same persistence path; marks onboarding complete and can enter the home shell. |
-| **Backup seed** | UI to review a recovery phrase (demo content unless wired to the stored mnemonic). |
-| **Verify PIN** | Stub verification then `markOnboardingComplete()` and session unlock → **Home**. |
+| **Backup seed** | Shows the **real** decrypted phrase for the create flow (PIN passed via `go` `extra` only during onboarding — sensitive; production should use a secure channel). |
+| **Verify PIN** | Checks **PIN hash** (or legacy decrypt fallback), then `markOnboardingComplete()` and session unlock → **Home**. |
 | **Home shell** | Bottom navigation: **Wallet** (dashboard), **Activity** (placeholder), **Settings** (full settings list + **Log out** clears local wallet and returns to onboarding). |
-| **Wallet tab** | Balance and token rows are **placeholders**; chain chip opens network selection. |
-| **Network select** | Updates selected chain in `ChainBloc` / `ChainRepository` (in-memory + config); RPC calls remain simulated. |
-| **Send** | Form validation; shows a demo snackbar instead of broadcasting a transaction. |
-| **Receive** | Static demo address and copy-style UI. |
+| **Wallet tab** | **Native balance** from RPC for the selected chain; recent txs from explorer API when configured (Sepolia via Blockscout); chain chip opens network selection. |
+| **Network select** | Updates selected chain in **Hive** + `ChainBloc` / `ChainRepository`, then refreshes balance. |
+| **Send** | **EVM**: PIN dialog → decrypt mnemonic → sign legacy transfer → `eth_sendRawTransaction`. **Non-EVM**: informational snackbar only in this build. |
+| **Receive** | Address for the **current chain** from `WalletBloc` + `ChainBloc` and copy UI. |
 | **Transaction detail** | Static demo layout; hash can be copied to clipboard. |
 | **Settings** | Sections from the product sketch (language, security, about, etc.); most rows are placeholders except **Log out**. |
 
@@ -39,7 +39,7 @@ A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app 
 - **DI:** `get_it` — `lib/injection/service_locator.dart` (repositories, use cases, blocs).
 - **Local storage:** `hive` / `hive_flutter` for wallet payload and metadata.
 - **Demo crypto:** `encrypt` + `KeyManager` for AES-style encryption of the mnemonic for Hive (not a production KDF); `flutter_secure_storage` is available for future platform-keychain flows.
-- **Networking:** `dio` is wired in `ChainRemoteDataSource` (timeouts/headers); methods still return **stub** balances, fees, and tx hashes after short delays.
+- **Networking:** `dio` JSON-RPC to public endpoints for **balance**, **gas price / fee estimate**, **tx list** (Blockscout-compatible API on Sepolia), and **broadcast**; `web3dart` + `http` for signing/sending.
 - **Optional future stack:** `web3dart`, `solana`, `web3modal_flutter`, `local_auth` are declared dependencies; integration is mostly **TODO** in code.
 
 ### Repository / use-case shape
@@ -80,10 +80,10 @@ Use a simulator or device; portrait orientations are preferred in `main.dart`.
 
 ## Current limitations (demo honesty)
 
-- **No real HD derivation** in production form — Ethereum/Solana addresses in `WalletRepositoryImpl` are still **placeholders** unless you replace `_deriveAccounts`.
-- **No real RPC** — balances, fees, history, and “send” do not hit live networks in the shipped stub implementations.
-- **PIN verify** on the verify screen is a **stub** (timed delay + navigate); not compared to a stored hash yet.
-- **Backup phrase** may not match the stored mnemonic until you load the real phrase from secure storage into that screen.
+- **Public RPC / explorer endpoints** can rate-limit or change; failures surface as errors in the UI. **No Infura/Etherscan API keys** are bundled — mainnet tx history is limited unless you add an API base on `ChainConfig`.
+- **PIN security** uses salted SHA-256 (demo-only); production wallets should use a proper KDF (e.g. Argon2) and platform secure enclaves where available.
+- **Onboarding PIN in `extra`** is convenient for the backup screen but is **not** a production pattern (memory-only routing argument).
+- **Solana native send** is not implemented here (read path + address derivation only).
 - **`web3modal_flutter`** is noted in `pubspec.yaml` as deprecated in favor of Reown AppKit for future production work.
 
 Treat keys and mnemonics as **sensitive** even in a demo; do not use real mainnet funds with placeholder crypto.
@@ -92,7 +92,7 @@ Treat keys and mnemonics as **sensitive** even in a demo; do not use real mainne
 
 ## Roadmap (short)
 
-Planned improvements include: analyzer/theme cleanups, `NetworkInfo`-aware UI, real **testnet** read (balance) and optional send on one chain, real backup phrase wiring, PIN hash verification, and light caching — see project issues or your internal task list for **Batch 1 / 2** tracking.
+Further work could include Solana transfers, EIP-1559 fee UX, encrypted `extra` / in-memory vault for backup PIN handoff, explorer API keys, and light balance caching.
 
 ---
 

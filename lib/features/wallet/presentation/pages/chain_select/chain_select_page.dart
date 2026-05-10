@@ -30,30 +30,21 @@ class ChainSelectPage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.symmetric(vertical: 12),
             children: [
-              _buildSection(context, 'Main Networks'),
-              ...ChainConfig.supportedChains.map((chain) => _buildChainTile(
-                    context,
-                    chain,
-                    chain.chainId == selectedChainId,
-                    onTap: () {
-                      context.read<ChainBloc>().add(
-                            ChainChanged(chain.chainId),
-                          );
-                      GoRouter.of(context).go('/home');
-                    },
-                  )),
-              _buildSection(context, 'Test Networks'),
-              ...ChainConfig.testChains.map((chain) => _buildChainTile(
-                    context,
-                    chain,
-                    chain.chainId == selectedChainId,
-                    onTap: () {
-                      context.read<ChainBloc>().add(
-                            ChainChanged(chain.chainId),
-                          );
-                      GoRouter.of(context).go('/home');
-                    },
-                  )),
+              _buildSection(context, 'Networks'),
+              ...ChainConfig.supportedChains.map(
+                (chain) => _buildChainTile(
+                  context,
+                  chain,
+                  chain.chainId == selectedChainId,
+                  onTap: () {
+                    context.read<ChainBloc>().add(ChainChanged(chain.chainId));
+                    context.read<ChainBloc>().add(
+                      const ChainRefreshRequested(),
+                    );
+                    GoRouter.of(context).go('/home');
+                  },
+                ),
+              ),
             ],
           );
         },
@@ -67,9 +58,9 @@ class ChainSelectPage extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.textTertiary,
-              letterSpacing: 1,
-            ),
+          color: AppColors.textTertiary,
+          letterSpacing: 1,
+        ),
       ),
     );
   }

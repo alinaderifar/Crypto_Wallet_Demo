@@ -1,3 +1,4 @@
+import '../../../../core/crypto/hd_wallet_derivation.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../datasources/wallet_local_data_source.dart';
 import '../../domain/entities/wallet_account.dart';
@@ -21,7 +22,7 @@ class WalletRepositoryImpl implements WalletRepository {
     required String pin,
   }) async {
     await _localDataSource.saveMnemonic(mnemonic: mnemonic, pin: pin);
-    final account = _deriveAccounts(mnemonic);
+    final account = await _deriveAccount(mnemonic);
     await _localDataSource.saveAccounts([account]);
     await _localDataSource.setOnboardingDone(true);
     return account;
@@ -45,9 +46,9 @@ class WalletRepositoryImpl implements WalletRepository {
     required String pin,
   }) async {
     await _localDataSource.saveMnemonic(mnemonic: mnemonic, pin: pin);
-    final account = _deriveAccounts(mnemonic);
+    final account = await _deriveAccount(mnemonic);
     await _localDataSource.saveAccounts([account]);
-    await _localDataSource.saveSelectedChain('1'); // Default to Ethereum
+    await _localDataSource.saveSelectedChain('11155111');
     await _localDataSource.setOnboardingDone(false);
     return account;
   }
@@ -68,31 +69,21 @@ class WalletRepositoryImpl implements WalletRepository {
     await _localDataSource.setOnboardingDone(true);
   }
 
-  /// Derives wallet accounts from a mnemonic phrase.
-  ///
-  /// In production, this uses proper HD wallet derivation (BIP-44):
-  /// - Ethereum: m/44'/60'/0'/0/{index}
-  /// - Solana: m/44'/501'/0'/0/{index}
-  WalletAccount _deriveAccounts(String mnemonic) {
-    // TODO: Implement actual HD wallet derivation using web3dart/solana SDK
-    // These are placeholder addresses generated for demo purposes only.
-    final timestamp = DateTime.now();
+  @override
+  Future<bool> verifyPin(String pin) => _localDataSource.verifyPin(pin);
+
+  @override
+  Future<String?> unlockMnemonic(String pin) =>
+      _localDataSource.getMnemonic(pin);
+
+  Future<WalletAccount> _deriveAccount(String mnemonic) async {
+    final d = await HdWalletDerivation.deriveAddresses(mnemonic);
     return WalletAccount(
       index: 0,
       label: 'Account 1',
-      ethAddress: '0x${_fakeAddress()}',
-      solAddress: _fakeSolAddress(),
-      createdAt: timestamp,
+      ethAddress: d.ethAddress,
+      solAddress: d.solAddress,
+      createdAt: DateTime.now(),
     );
-  }
-
-  static String _fakeAddress() {
-    // Placeholder — never use in production
-    return '742d35Cc6634C0532925a3b844Bc9e7595f2bD18';
-  }
-
-  static String _fakeSolAddress() {
-    // Placeholder — never use in production
-    return 'SOL7x2VqE2xGZ9kD4cQh6N3eW8YFjR5mK9nTpL4sX8cV';
   }
 }

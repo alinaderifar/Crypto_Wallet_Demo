@@ -31,6 +31,13 @@ class _VerifyPinPageState extends State<VerifyPinPage> {
       listener: (context, state) {
         if (state is AuthPinVerified) {
           _finishUnlock(context);
+        } else if (state is AuthFailureState) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.failure.message),
+              backgroundColor: AppColors.error,
+            ),
+          );
         }
       },
       child: Scaffold(
@@ -55,8 +62,8 @@ class _VerifyPinPageState extends State<VerifyPinPage> {
                 Text(
                   'Enter the PIN you set to access your wallet.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 32),
                 TextField(
@@ -79,13 +86,26 @@ class _VerifyPinPageState extends State<VerifyPinPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _onVerifyPressed,
-                    child: const Text('Unlock Wallet'),
-                  ),
+                BlocBuilder<AuthBloc, AuthState>(
+                  builder: (context, state) {
+                    final loading = state is AuthLoading;
+                    return SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: loading ? null : _onVerifyPressed,
+                        child: loading
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Unlock Wallet'),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
                 _buildBiometricOption(),
@@ -114,9 +134,7 @@ class _VerifyPinPageState extends State<VerifyPinPage> {
         },
         icon: const Icon(Icons.fingerprint, size: 20),
         label: const Text('Unlock with Biometrics'),
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(200, 44),
-        ),
+        style: OutlinedButton.styleFrom(minimumSize: const Size(200, 44)),
       ),
     );
   }

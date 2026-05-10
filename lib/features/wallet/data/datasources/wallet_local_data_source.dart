@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 
 import '../../../../core/security/key_manager.dart';
+import '../../../../core/security/pin_hashing.dart';
 import '../../domain/entities/wallet_account.dart';
 
 /// Local data source using Hive for persisting wallet data.
@@ -28,6 +29,22 @@ class WalletLocalDataSource {
   }) async {
     final encrypted = keyManager.encryptMnemonic(mnemonic, pin);
     await _box.put(_mnemonicKey, encrypted);
+    await savePinHashFromPin(pin);
+  }
+
+  /// Persists a salted SHA-256 record used to verify the wallet PIN.
+  Future<void> savePinHashFromPin(String pin) async {
+    await _box.put(_pinHashKey, newPinHashRecord(pin));
+  }
+
+  /// True when [pin] matches the stored hash, or (legacy) decrypts the mnemonic.
+  Future<bool> verifyPin(String pin) async {
+    final stored = _box.get(_pinHashKey);
+    if (stored == null || stored is! String) {
+      final m = await getMnemonic(pin);
+      return m != null;
+    }
+    return verifyPinHashRecord(pin, stored);
   }
 
   /// Decrypts and retrieves the stored mnemonic.
@@ -60,7 +77,8 @@ class WalletLocalDataSource {
   }
 
   bool isOnboardingDone() {
-    if (!_box.containsKey(_onboardingDoneKey) && _box.containsKey(_mnemonicKey)) {
+    if (!_box.containsKey(_onboardingDoneKey) &&
+        _box.containsKey(_mnemonicKey)) {
       return true;
     }
     return (_box.get(_onboardingDoneKey) as bool?) ?? false;
@@ -69,13 +87,15 @@ class WalletLocalDataSource {
   /// Stores derived wallet accounts.
   Future<void> saveAccounts(List<WalletAccount> accounts) async {
     final jsonList = accounts
-        .map((a) => {
-              'index': a.index,
-              'label': a.label,
-              'ethAddress': a.ethAddress,
-              'solAddress': a.solAddress,
-              'createdAt': a.createdAt.toIso8601String(),
-            })
+        .map(
+          (a) => {
+            'index': a.index,
+            'label': a.label,
+            'ethAddress': a.ethAddress,
+            'solAddress': a.solAddress,
+            'createdAt': a.createdAt.toIso8601String(),
+          },
+        )
         .toList();
     await _box.put(_accountsKey, jsonList);
   }

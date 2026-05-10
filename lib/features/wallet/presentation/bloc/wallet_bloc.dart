@@ -18,13 +18,39 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     required CreateWallet createWallet,
     required ImportWallet importWallet,
     required WalletRepository walletRepository,
-  })  : _createWallet = createWallet,
-        _importWallet = importWallet,
-        _walletRepository = walletRepository,
-        super(const WalletState()) {
+  }) : _createWallet = createWallet,
+       _importWallet = importWallet,
+       _walletRepository = walletRepository,
+       super(const WalletState()) {
+    on<WalletLoadRequested>(_onLoadRequested);
     on<WalletCreateRequested>(_onCreateRequested);
     on<WalletImportRequested>(_onImportRequested);
     on<WalletLogoutRequested>(_onLogoutRequested);
+  }
+
+  Future<void> _onLoadRequested(
+    WalletLoadRequested event,
+    Emitter<WalletState> emit,
+  ) async {
+    emit(state.copyWith(status: WalletStatus.loading));
+    final account = await _walletRepository.getCurrentAccount();
+    if (account != null) {
+      emit(
+        state.copyWith(
+          status: WalletStatus.success,
+          currentAccount: account,
+          errorMessage: null,
+        ),
+      );
+    } else {
+      emit(
+        state.copyWith(
+          status: WalletStatus.initial,
+          currentAccount: null,
+          errorMessage: null,
+        ),
+      );
+    }
   }
 
   Future<void> _onCreateRequested(
@@ -34,14 +60,15 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     emit(state.copyWith(status: WalletStatus.loading));
     final result = await _createWallet(CreateWalletParams(pin: event.pin));
     result.fold(
-      (Failure failure) => emit(state.copyWith(
-        status: WalletStatus.error,
-        errorMessage: failure.message,
-      )),
-      (WalletAccount account) => emit(state.copyWith(
-        status: WalletStatus.success,
-        currentAccount: account,
-      )),
+      (Failure failure) => emit(
+        state.copyWith(
+          status: WalletStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (WalletAccount account) => emit(
+        state.copyWith(status: WalletStatus.success, currentAccount: account),
+      ),
     );
   }
 
@@ -50,19 +77,19 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     Emitter<WalletState> emit,
   ) async {
     emit(state.copyWith(status: WalletStatus.loading));
-    final result = await _importWallet(ImportWalletParams(
-      mnemonic: event.mnemonic,
-      pin: event.pin,
-    ));
+    final result = await _importWallet(
+      ImportWalletParams(mnemonic: event.mnemonic, pin: event.pin),
+    );
     result.fold(
-      (Failure failure) => emit(state.copyWith(
-        status: WalletStatus.error,
-        errorMessage: failure.message,
-      )),
-      (WalletAccount account) => emit(state.copyWith(
-        status: WalletStatus.success,
-        currentAccount: account,
-      )),
+      (Failure failure) => emit(
+        state.copyWith(
+          status: WalletStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
+      (WalletAccount account) => emit(
+        state.copyWith(status: WalletStatus.success, currentAccount: account),
+      ),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/crypto/hd_wallet_derivation.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/types/either.dart';
 import '../entities/wallet_account.dart';
@@ -9,10 +10,7 @@ import '../repositories/wallet_repository.dart';
 class ImportWalletParams extends Equatable {
   final String mnemonic;
   final String pin;
-  const ImportWalletParams({
-    required this.mnemonic,
-    required this.pin,
-  });
+  const ImportWalletParams({required this.mnemonic, required this.pin});
 
   @override
   List<Object> get props => [mnemonic, pin];
@@ -27,13 +25,15 @@ class ImportWallet {
 
   ImportWallet(this._repository);
 
-  Future<Either<Failure, WalletAccount>> call(
-    ImportWalletParams params,
-  ) async {
+  Future<Either<Failure, WalletAccount>> call(ImportWalletParams params) async {
+    if (!HdWalletDerivation.isValidMnemonic(params.mnemonic)) {
+      return Left(
+        WalletFailure(message: 'Invalid recovery phrase (BIP-39 checksum).'),
+      );
+    }
     try {
-      // TODO: Add mnemonic validation (BIP-39 wordlist checksum)
       final account = await _repository.importWallet(
-        mnemonic: params.mnemonic,
+        mnemonic: params.mnemonic.trim(),
         pin: params.pin,
       );
       return Right(account);

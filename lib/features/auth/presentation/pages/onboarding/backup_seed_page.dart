@@ -1,4 +1,6 @@
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/features/wallet/domain/repositories/wallet_repository.dart';
+import 'package:crypto_wallet_demo/injection/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,13 +13,54 @@ class BackupSeedPage extends StatefulWidget {
 
 class _BackupSeedPageState extends State<BackupSeedPage> {
   bool _confirmedBackup = false;
+  bool _loading = true;
+  String? _error;
+  List<String> _mnemonicWords = const [];
+  bool _loadStarted = false;
 
-  // TODO: Get actual mnemonic from KeyManager
-  final List<String> _mnemonicWords = const [
-    'abandon', 'abandon', 'abandon', 'abandon',
-    'abandon', 'abandon', 'abandon', 'abandon',
-    'abandon', 'abandon', 'abandon', 'about',
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_loadStarted) return;
+    _loadStarted = true;
+    _loadMnemonic();
+  }
+
+  Future<void> _loadMnemonic() async {
+    final extra = GoRouterState.of(context).extra;
+    final pin = extra is String ? extra : null;
+    if (pin == null || pin.length < 4) {
+      setState(() {
+        _loading = false;
+        _error =
+            'Missing PIN. Go back, create your wallet again, and continue from this screen.';
+      });
+      return;
+    }
+
+    final phrase = await sl<WalletRepository>().unlockMnemonic(pin);
+    if (!mounted) return;
+    if (phrase == null || phrase.trim().isEmpty) {
+      setState(() {
+        _loading = false;
+        _error =
+            'Could not decrypt your recovery phrase. Check your PIN context.';
+      });
+      return;
+    }
+
+    final words = phrase.trim().split(RegExp(r'\s+'));
+    setState(() {
+      _mnemonicWords = words;
+      _loading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    _mnemonicWords = const [];
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,22 +84,36 @@ class _BackupSeedPageState extends State<BackupSeedPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Write down these 12 words in order and store them in a safe place.\n\n'
-                '⚠️ Never share your recovery phrase with anyone. '
+                'Write down these ${_mnemonicWords.isEmpty ? 12 : _mnemonicWords.length} words in order and store them in a safe place.\n\n'
+                'Never share your recovery phrase with anyone. '
                 'If you lose it, you will lose access to your wallet.',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                      height: 1.5,
-                    ),
+                  color: AppColors.textSecondary,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 24),
-              // Seed phrase grid
-              _buildSeedGrid(),
+              if (_loading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+              if (_error != null) ...[
+                Text(
+                  _error!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.error),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (!_loading && _error == null && _mnemonicWords.isNotEmpty)
+                _buildSeedGrid(),
               const SizedBox(height: 24),
-              // Warning card
               _buildWarningCard(),
               const SizedBox(height: 24),
-              // Checkbox
               CheckboxListTile(
                 title: const Text(
                   'I have written down my recovery phrase in a safe place',
@@ -69,12 +126,11 @@ class _BackupSeedPageState extends State<BackupSeedPage> {
                 contentPadding: EdgeInsets.zero,
               ),
               const SizedBox(height: 16),
-              // Continue button
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _confirmedBackup ? _onContinue : null,
+                  onPressed: _canContinue ? _onContinue : null,
                   child: const Text('Continue'),
                 ),
               ),
@@ -86,15 +142,21 @@ class _BackupSeedPageState extends State<BackupSeedPage> {
     );
   }
 
+  bool get _canContinue =>
+      _confirmedBackup &&
+      !_loading &&
+      _error == null &&
+      _mnemonicWords.isNotEmpty;
+
   Widget _buildSeedGrid() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceLight.withOpacity(0.6)
-            : AppColors.surface.withOpacity(0.6),
+            ? AppColors.surfaceLight.withValues(alpha: 0.6)
+            : AppColors.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
       ),
       child: Wrap(
         spacing: 10,
@@ -111,9 +173,9 @@ class _BackupSeedPageState extends State<BackupSeedPage> {
       width: 120,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -140,22 +202,21 @@ class _BackupSeedPageState extends State<BackupSeedPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.08),
+        color: AppColors.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.error.withOpacity(0.2)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded,
-              color: AppColors.error, size: 24),
+          Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Never store your recovery phrase digitally. Write it on paper and keep it in a secure, offline location.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.error,
-                    height: 1.4,
-                  ),
+                color: AppColors.error,
+                height: 1.4,
+              ),
             ),
           ),
         ],

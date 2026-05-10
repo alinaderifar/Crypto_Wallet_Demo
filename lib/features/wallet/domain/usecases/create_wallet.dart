@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/crypto/hd_wallet_derivation.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/types/either.dart';
 import '../entities/wallet_account.dart';
@@ -23,17 +24,11 @@ class CreateWallet {
 
   CreateWallet(this._repository);
 
-  Future<Either<Failure, WalletAccount>> call(
-    CreateWalletParams params,
-  ) async {
-    // TODO: Integrate with KeyManager to generate mnemonic.
-    // For now, use a placeholder mnemonic — NEVER use in production.
-    const placeholderMnemonic =
-        'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
-
+  Future<Either<Failure, WalletAccount>> call(CreateWalletParams params) async {
     try {
+      final mnemonic = HdWalletDerivation.generateMnemonic();
       final account = await _repository.createWallet(
-        mnemonic: placeholderMnemonic,
+        mnemonic: mnemonic,
         pin: params.pin,
       );
       return Right(account);
