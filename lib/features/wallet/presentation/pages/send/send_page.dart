@@ -1,4 +1,5 @@
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/core/network/connectivity_cubit.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/entities/chain_config.dart';
 import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_bloc.dart';
 import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_state.dart';
@@ -102,14 +103,20 @@ class _SendPageState extends State<SendPage> {
                 // Fee preview
                 _buildFeePreview(),
                 const SizedBox(height: 32),
-                // Send button
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: _onSendPressed,
-                    child: const Text('Review Transaction'),
-                  ),
+                BlocBuilder<ConnectivityCubit, ConnectivityState>(
+                  buildWhen: (a, b) =>
+                      a.hasChecked != b.hasChecked || a.online != b.online,
+                  builder: (context, conn) {
+                    final disabled = conn.hasChecked && !conn.online;
+                    return SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: disabled ? null : _onSendPressed,
+                        child: const Text('Review Transaction'),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 24),
               ],
@@ -128,10 +135,10 @@ class _SendPageState extends State<SendPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.surfaceLight.withOpacity(0.6)
-              : AppColors.surface.withOpacity(0.6),
+              ? AppColors.surfaceLight.withValues(alpha: 0.6)
+              : AppColors.surface.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border.withOpacity(0.2)),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -153,11 +160,14 @@ class _SendPageState extends State<SendPage> {
                         .textTheme
                         .bodySmall
                         ?.copyWith(color: AppColors.textTertiary)),
-                BlocBuilder<ChainBloc, ChainState>(
-                  builder: (context, state) {
-                    final chain = state.selectedChain ?? ChainConfig.ethereumMainnet;
-                    return Text(chain.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600));
+                BlocSelector<ChainBloc, ChainState, String>(
+                  selector: (state) =>
+                      (state.selectedChain ?? ChainConfig.ethereumMainnet).name,
+                  builder: (context, chainName) {
+                    return Text(
+                      chainName,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    );
                   },
                 ),
               ],
@@ -174,9 +184,9 @@ class _SendPageState extends State<SendPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.4),
+        color: AppColors.surface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.15)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,17 +218,17 @@ class _SendPageState extends State<SendPage> {
           ),
           if (_showFeeBreakdown) ...[
             const Divider(height: 20),
-            _FeeRow('Gas limit', '21,000'),
-            _FeeRow('Gas price', '~5 Gwei'),
+            _buildFeeRow('Gas limit', '21,000'),
+            _buildFeeRow('Gas price', '~5 Gwei'),
             const Divider(height: 20),
-            _FeeRow('Total fee', '~0.001 ETH', isBold: true),
+            _buildFeeRow('Total fee', '~0.001 ETH', isBold: true),
           ],
         ],
       ),
     );
   }
 
-  Widget _FeeRow(String label, String value, {bool isBold = false}) {
+  Widget _buildFeeRow(String label, String value, {bool isBold = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -241,6 +251,15 @@ class _SendPageState extends State<SendPage> {
 
   void _onSendPressed() {
     if (!_formKey.currentState!.validate()) return;
+    final conn = context.read<ConnectivityCubit>().state;
+    if (conn.hasChecked && !conn.online) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Connect to the internet to review or send.'),
+        ),
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(

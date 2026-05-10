@@ -1,3 +1,4 @@
+import 'package:crypto_wallet_demo/core/network/connectivity_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,6 +39,9 @@ class CryptoWalletApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<ConnectivityCubit>.value(
+          value: di.sl<ConnectivityCubit>(),
+        ),
         BlocProvider(
           create: (_) => di.sl<AuthBloc>(),
         ),

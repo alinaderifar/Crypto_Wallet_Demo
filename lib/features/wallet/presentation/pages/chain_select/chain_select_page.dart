@@ -21,6 +21,9 @@ class ChainSelectPage extends StatelessWidget {
         ),
       ),
       body: BlocBuilder<ChainBloc, ChainState>(
+        buildWhen: (prev, curr) =>
+            prev.selectedChain?.chainId != curr.selectedChain?.chainId ||
+            prev.status != curr.status,
         builder: (context, state) {
           final selectedChainId = state.selectedChain?.chainId;
 
@@ -83,7 +86,7 @@ class ChainSelectPage extends StatelessWidget {
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.15) : null,
+          color: isSelected ? AppColors.primary.withValues(alpha: 0.15) : null,
           shape: BoxShape.circle,
         ),
         child: Center(
@@ -110,7 +113,7 @@ class ChainSelectPage extends StatelessWidget {
           : null,
       onTap: onTap,
       selectedTileColor: isSelected
-          ? AppColors.primary.withOpacity(0.06)
+          ? AppColors.primary.withValues(alpha: 0.06)
           : null,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );

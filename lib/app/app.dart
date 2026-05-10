@@ -1,3 +1,4 @@
+import 'package:crypto_wallet_demo/core/network/offline_banner.dart';
 import 'package:flutter/material.dart';
 
 import 'router/router.dart';
@@ -15,6 +16,15 @@ class App extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       routerConfig: appRouter,
+      builder: (context, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const OfflineBanner(),
+            Expanded(child: child ?? const SizedBox.shrink()),
+          ],
+        );
+      },
     );
   }
 }

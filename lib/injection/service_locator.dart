@@ -1,6 +1,10 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 
+import '../core/network/connectivity_cubit.dart';
+import '../core/network/connectivity_reader.dart';
+import '../core/network/network_info.dart';
 import '../features/auth/data/repositories/auth_repository_impl.dart';
 import '../features/auth/domain/repositories/auth_repository.dart';
 import '../features/auth/presentation/bloc/auth_bloc.dart';
@@ -23,6 +27,13 @@ final ValueNotifier<bool> walletSessionNotifier = ValueNotifier<bool>(false);
 
 /// Initialize the dependency injection container.
 Future<void> init() async {
+  sl.registerLazySingleton<Connectivity>(() => Connectivity());
+  sl.registerLazySingleton<NetworkInfo>(() => NetworkInfo(sl<Connectivity>()));
+  sl.registerLazySingleton<ConnectivityReader>(() => sl<NetworkInfo>());
+  sl.registerLazySingleton<ConnectivityCubit>(
+    () => ConnectivityCubit(sl<ConnectivityReader>()),
+  );
+
   final walletLocalDataSource = WalletLocalDataSource();
   await walletLocalDataSource.init();
   sl.registerLazySingleton<WalletLocalDataSource>(
@@ -76,4 +87,6 @@ Future<void> init() async {
   sl.registerFactory<TransactionBloc>(() => TransactionBloc());
 
   walletSessionNotifier.value = await sl<WalletRepository>().isSessionReady();
+
+  await sl<ConnectivityCubit>().start();
 }
