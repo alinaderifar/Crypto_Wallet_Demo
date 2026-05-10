@@ -1,19 +1,76 @@
 name: crypto_wallet_demo
-description: "A new Flutter project."
+description: "A modern, UX-first non-custodial multi-chain crypto wallet built with Flutter."
 publish_to: 'none'
-version: 0.1.0
+version: 0.1.0+1
 
 environment:
-  sdk: ^3.8.0
+  sdk: '>=3.8.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
 
+  # State Management
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+
+  # Routing
+  go_router: ^14.2.0
+
+  # WalletConnect / Multi-wallet
+  # Note: web3modal_flutter is deprecated; migrate to reown_appkit for production
+  web3modal_flutter: ^3.3.4
+
+  # Blockchain interaction
+  # Note: web3dart version constrained by web3modal_flutter dependency
+  web3dart: ^2.7.3
+  solana: ">=0.28.0 <0.32.0"
+
+  # Local Storage & Encryption
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # Biometric Authentication
+  local_auth: ^2.2.0
+
+  # Networking
+  dio: ^5.7.0
+
+  # UI
+  flutter_animate: ^4.5.2
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.10+1
+  cached_network_image: ^3.4.0
+
+  # Code Generation
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+
+  # Utility
+  equatable: ^2.0.5
+  get_it: ^8.0.3
+  google_fonts: ^6.2.1
+  flutter_secure_storage: ^9.2.4
+  encrypt: ^5.0.3
+  uuid: ^4.4.1
+  logger: ^2.3.0
+  path_provider: ^2.1.3
+  url_launcher: ^6.3.1
+  connectivity_plus: ^6.0.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  build_runner: ^2.4.11
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  hive_generator: ^2.0.1
+  mockito: ^5.4.4
+  bloc_test: ^9.1.6
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icons/
+    - assets/images/

@@ -1,20 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-void main() {
-  runApp(const MainApp());
+import 'app/app.dart';
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'features/wallet/presentation/bloc/chain_bloc.dart';
+import 'features/wallet/presentation/bloc/transaction_bloc.dart';
+import 'injection/service_locator.dart' as di;
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // System chrome settings
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
+
+  // Initialize dependency injection
+  await di.init();
+
+  runApp(const CryptoWalletApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class CryptoWalletApp extends StatelessWidget {
+  const CryptoWalletApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => di.sl<AuthBloc>(),
         ),
-      ),
+        BlocProvider(
+          create: (_) => di.sl<WalletBloc>(),
+        ),
+        BlocProvider(
+          create: (_) => di.sl<ChainBloc>(),
+        ),
+        BlocProvider(
+          create: (_) => di.sl<TransactionBloc>(),
+        ),
+      ],
+      child: const App(),
     );
   }
 }
