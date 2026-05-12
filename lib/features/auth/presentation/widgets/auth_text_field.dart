@@ -30,9 +30,9 @@ class AuthTextField extends StatelessWidget {
       obscureText: obscureText,
       keyboardType: keyboardType,
       maxLength: maxLength,
-      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: AppColors.textPrimary,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyLarge?.copyWith(color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -40,17 +40,14 @@ class AuthTextField extends StatelessWidget {
             ? Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: IconTheme(
-                  data: IconThemeData(
-                    color: AppColors.textTertiary,
-                    size: 20,
-                  ),
+                  data: IconThemeData(color: AppColors.textTertiary, size: 20),
                   child: prefixIcon!,
                 ),
               )
             : null,
         hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textTertiary.withOpacity(0.5),
-            ),
+          color: AppColors.textTertiary.withValues(alpha: 0.5),
+        ),
         counterText: '',
       ),
       validator: validator,

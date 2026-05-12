@@ -65,9 +65,11 @@ class SendTransaction {
   }) async {
     // TODO: Implement actual transaction building, signing, and broadcasting.
     await Future<void>.delayed(const Duration(seconds: 1));
-    return Right(SendResult(
-      txHash: '0x${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
-      chainId: chainId,
-    ));
+    return Right(
+      SendResult(
+        txHash: '0x${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}',
+        chainId: chainId,
+      ),
+    );
   }
 }

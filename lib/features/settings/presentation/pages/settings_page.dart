@@ -118,9 +118,9 @@ class SettingsPage extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: AppColors.textTertiary,
-              letterSpacing: 1.5,
-            ),
+          color: AppColors.textTertiary,
+          letterSpacing: 1.5,
+        ),
       ),
     );
   }
@@ -163,7 +163,7 @@ class _SettingsTile extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: AppColors.primary, size: 20),
@@ -172,8 +172,8 @@ class _SettingsTile extends StatelessWidget {
       subtitle: subtitle != null
           ? Text(subtitle!, style: const TextStyle(fontSize: 12))
           : null,
-      trailing: trailing ??
-          Icon(Icons.chevron_right, color: AppColors.textTertiary),
+      trailing:
+          trailing ?? Icon(Icons.chevron_right, color: AppColors.textTertiary),
       onTap: onTap,
     );
   }

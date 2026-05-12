@@ -47,11 +47,9 @@ class TransactionDetailPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.success.withOpacity(0.1),
+        color: AppColors.success.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.success.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -83,10 +81,10 @@ class TransactionDetailPage extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceLight.withOpacity(0.6)
-            : AppColors.surface.withOpacity(0.6),
+            ? AppColors.surfaceLight.withValues(alpha: 0.6)
+            : AppColors.surface.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withOpacity(0.2)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
       ),
       child: Column(
         children: [
@@ -110,10 +108,9 @@ class TransactionDetailPage extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppColors.textTertiary),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textTertiary),
           ),
           Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
@@ -125,9 +122,9 @@ class TransactionDetailPage extends StatelessWidget {
     return InkWell(
       onTap: () {
         Clipboard.setData(ClipboardData(text: hash));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Hash copied')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Hash copied')));
       },
       borderRadius: BorderRadius.circular(8),
       child: Padding(
@@ -140,9 +137,9 @@ class TransactionDetailPage extends StatelessWidget {
               child: Text(
                 _truncate(hash),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                      color: AppColors.primary,
-                    ),
+                  fontFamily: 'monospace',
+                  color: AppColors.primary,
+                ),
               ),
             ),
             Icon(Icons.copy_all, size: 16, color: AppColors.textTertiary),
@@ -161,9 +158,9 @@ class TransactionDetailPage extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.08),
+          color: AppColors.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

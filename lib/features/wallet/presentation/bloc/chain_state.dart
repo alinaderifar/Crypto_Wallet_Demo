@@ -32,6 +32,10 @@ class ChainState extends Equatable {
   }
 
   @override
-  List<Object?> get props =>
-      [status, selectedChain, currentBalance, errorMessage];
+  List<Object?> get props => [
+    status,
+    selectedChain,
+    currentBalance,
+    errorMessage,
+  ];
 }
