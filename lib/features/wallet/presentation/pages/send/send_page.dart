@@ -1,4 +1,5 @@
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/app/theme/app_palette.dart';
 import 'package:crypto_wallet_demo/core/network/connectivity_cubit.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/entities/chain_config.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/repositories/chain_repository.dart';
@@ -66,6 +67,7 @@ class _SendPageState extends State<SendPage> {
 
   @override
   Widget build(BuildContext context) {
+    final padding = context.screenPadding;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Send'),
@@ -76,7 +78,7 @@ class _SendPageState extends State<SendPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: padding),
           child: Form(
             key: _formKey,
             child: Column(
@@ -193,17 +195,16 @@ class _SendPageState extends State<SendPage> {
   }
 
   Widget _buildChainSelector(BuildContext context) {
+    final palette = AppPalette.of(context);
     return InkWell(
       onTap: () => GoRouter.of(context).go('/home/chains'),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.surfaceLight.withValues(alpha: 0.6)
-              : AppColors.surface.withValues(alpha: 0.6),
+          color: palette.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
+          border: Border.all(color: palette.border),
         ),
         child: Row(
           children: [
@@ -247,13 +248,14 @@ class _SendPageState extends State<SendPage> {
   }
 
   Widget _buildFeePreview() {
+    final palette = AppPalette.of(context);
     final fee = _feeEstimate ?? '—';
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.4),
+        color: palette.surfaceMuted,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.15)),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

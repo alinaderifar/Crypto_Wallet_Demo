@@ -1,6 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import '../core/network/connectivity_cubit.dart';
 import '../core/network/connectivity_reader.dart';
@@ -34,6 +35,8 @@ Future<void> init() async {
   sl.registerLazySingleton<ConnectivityCubit>(
     () => ConnectivityCubit(sl<ConnectivityReader>()),
   );
+
+  await Hive.initFlutter();
 
   final walletLocalDataSource = WalletLocalDataSource();
   await walletLocalDataSource.init();

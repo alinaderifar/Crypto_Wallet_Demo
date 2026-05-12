@@ -1,4 +1,5 @@
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/app/theme/app_palette.dart';
 import 'package:crypto_wallet_demo/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:crypto_wallet_demo/features/auth/presentation/bloc/auth_event.dart';
 import 'package:crypto_wallet_demo/features/auth/presentation/bloc/auth_state.dart';
@@ -31,6 +32,9 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+    final padding = context.screenPadding;
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is AuthWalletImported) {
@@ -53,12 +57,11 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
           ),
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(padding, 8, padding, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 8),
                 Text(
                   'Import Your Wallet',
                   style: Theme.of(context).textTheme.displayLarge,
@@ -66,24 +69,19 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
                 const SizedBox(height: 8),
                 Text(
                   'Enter your 12 or 24 word recovery phrase to restore your wallet.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
                 TextField(
                   controller: _mnemonicController,
                   maxLines: 4,
                   textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Recovery Phrase',
                     hintText: 'word word word word word word...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _pinController,
                   obscureText: _obscurePin,
@@ -94,7 +92,7 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
                     suffixIcon: IconButton(
                       icon: Icon(
                         _obscurePin ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.textTertiary,
+                        color: palette.textTertiary,
                       ),
                       onPressed: () =>
                           setState(() => _obscurePin = !_obscurePin),
@@ -114,14 +112,15 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
                         _obscureConfirmPin
                             ? Icons.visibility_off
                             : Icons.visibility,
-                        color: AppColors.textTertiary,
+                        color: palette.textTertiary,
                       ),
                       onPressed: () => setState(
-                          () => _obscureConfirmPin = !_obscureConfirmPin),
+                        () => _obscureConfirmPin = !_obscureConfirmPin,
+                      ),
                     ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
                   height: 56,
@@ -130,7 +129,6 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
                     child: const Text('Import Wallet'),
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -174,10 +172,7 @@ class _ImportWalletPageState extends State<ImportWalletPage> {
     }
 
     context.read<AuthBloc>().add(
-          AuthImportWallet(
-            mnemonic: mnemonic,
-            pin: pin,
-          ),
-        );
+      AuthImportWallet(mnemonic: mnemonic, pin: pin),
+    );
   }
 }

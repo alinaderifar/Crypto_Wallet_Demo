@@ -7,41 +7,60 @@ import 'app_colors.dart';
 class AppTheme {
   AppTheme._();
 
-  // ─── Light Theme ────────────────────────────────────────────────
   static ThemeData get lightTheme => _baseTheme(
         brightness: Brightness.light,
         primary: AppColors.primary,
-        background: Colors.white,
-        surface: AppColors.surface,
-        textPrimary: Colors.black87,
-        textSecondary: Colors.black54,
+        background: const Color(0xFFF7F7FB),
+        surface: Colors.white,
+        surfaceMuted: const Color(0xFFF0F1F7),
+        border: const Color(0xFFD5D7E6),
+        textPrimary: const Color(0xFF111127),
+        textSecondary: const Color(0xFF4A4A66),
+        textTertiary: const Color(0xFF6A6A85),
       );
 
-  // ─── Dark Theme ─────────────────────────────────────────────────
   static ThemeData get darkTheme => _baseTheme(
         brightness: Brightness.dark,
         primary: AppColors.primaryLight,
         background: AppColors.background,
         surface: AppColors.surface,
+        surfaceMuted: AppColors.surfaceLight,
+        border: AppColors.border,
         textPrimary: AppColors.textPrimary,
         textSecondary: AppColors.textSecondary,
+        textTertiary: AppColors.textTertiary,
       );
 
-  // ─── Shared base theme ──────────────────────────────────────────
   static ThemeData _baseTheme({
     required Brightness brightness,
     required Color primary,
     required Color background,
     required Color surface,
+    required Color surfaceMuted,
+    required Color border,
     required Color textPrimary,
     required Color textSecondary,
+    required Color textTertiary,
   }) {
     final isDark = brightness == Brightness.dark;
+    final colorScheme = ColorScheme(
+      brightness: brightness,
+      primary: primary,
+      onPrimary: Colors.white,
+      secondary: AppColors.accent,
+      onSecondary: isDark ? Colors.black : Colors.white,
+      error: AppColors.error,
+      onError: Colors.white,
+      surface: surface,
+      onSurface: textPrimary,
+      onSurfaceVariant: textSecondary,
+      outline: border,
+    );
 
     return ThemeData(
       brightness: brightness,
       useMaterial3: true,
-      colorSchemeSeed: primary,
+      colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       appBarTheme: AppBarTheme(
         backgroundColor: surface,
@@ -58,14 +77,32 @@ class AppTheme {
             ? SystemUiOverlayStyle.light
             : SystemUiOverlayStyle.dark,
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: surface,
+        indicatorColor: primary.withValues(alpha: 0.14),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+            color: selected ? primary : textSecondary,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final selected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: selected ? primary : textTertiary,
+            size: 24,
+          );
+        }),
+      ),
       cardTheme: CardThemeData(
-        color: surface.withOpacity(isDark ? 1.0 : 0.95),
+        color: surface,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: AppColors.border.withOpacity(isDark ? 0.3 : 0.1),
-            width: 1,
+            color: border.withValues(alpha: isDark ? 0.45 : 0.9),
           ),
         ),
       ),
@@ -77,10 +114,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 16,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           textStyle: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -91,14 +125,11 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primary,
-          side: BorderSide(color: primary.withOpacity(0.4)),
+          side: BorderSide(color: primary.withValues(alpha: 0.4)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: GoogleFonts.inter(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -115,18 +146,35 @@ class AppTheme {
           ),
         ),
       ),
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return primary;
+          return Colors.transparent;
+        }),
+        checkColor: WidgetStateProperty.all(Colors.white),
+        side: BorderSide(color: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark ? AppColors.surfaceLight : textPrimary,
+        contentTextStyle: GoogleFonts.inter(
+          color: Colors.white,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surface,
+        fillColor: surfaceMuted,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: AppColors.border.withOpacity(isDark ? 0.3 : 0.15),
-          ),
+          borderSide: BorderSide(color: border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -141,7 +189,7 @@ class AppTheme {
           vertical: 14,
         ),
         hintStyle: GoogleFonts.inter(
-          color: textSecondary.withOpacity(0.6),
+          color: textTertiary,
           fontSize: 15,
         ),
         labelStyle: GoogleFonts.inter(
@@ -152,8 +200,9 @@ class AppTheme {
       ),
       textTheme: TextTheme(
         displayLarge: GoogleFonts.inter(
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
+          fontSize: 30,
+          fontWeight: FontWeight.w800,
+          height: 1.15,
           color: textPrimary,
         ),
         displayMedium: GoogleFonts.inter(
@@ -173,41 +222,36 @@ class AppTheme {
         ),
         titleMedium: GoogleFonts.inter(
           fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           color: textPrimary,
         ),
-        bodyLarge: GoogleFonts.inter(
-          fontSize: 16,
-          color: textPrimary,
-        ),
+        bodyLarge: GoogleFonts.inter(fontSize: 16, color: textPrimary),
         bodyMedium: GoogleFonts.inter(
           fontSize: 14,
+          height: 1.45,
           color: textSecondary,
         ),
         bodySmall: GoogleFonts.inter(
-          fontSize: 12,
+          fontSize: 13,
+          height: 1.4,
           color: textSecondary,
         ),
         labelSmall: GoogleFonts.inter(
           fontSize: 11,
-          color: textSecondary,
+          color: textTertiary,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.5,
         ),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: surface.withOpacity(isDark ? 0.8 : 0.6),
-        selectedColor: primary.withOpacity(0.15),
-        labelStyle: GoogleFonts.inter(
-          fontSize: 12,
-          color: textPrimary,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        backgroundColor: surfaceMuted,
+        selectedColor: primary.withValues(alpha: 0.14),
+        labelStyle: GoogleFonts.inter(fontSize: 13, color: textPrimary),
+        side: BorderSide(color: border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       dividerTheme: DividerThemeData(
-        color: AppColors.divider.withOpacity(isDark ? 0.5 : 0.3),
+        color: AppColors.divider.withValues(alpha: isDark ? 0.5 : 0.25),
         thickness: 1,
       ),
       pageTransitionsTheme: const PageTransitionsTheme(

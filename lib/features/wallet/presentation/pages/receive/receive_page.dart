@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/app/theme/app_palette.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/entities/chain_config.dart';
 import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_bloc.dart';
 import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_state.dart';
@@ -83,15 +84,14 @@ class ReceivePage extends StatelessWidget {
     String address,
     String symbol,
   ) {
+    final palette = AppPalette.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceLight.withValues(alpha: 0.6)
-            : AppColors.surface.withValues(alpha: 0.6),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [

@@ -1,4 +1,5 @@
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/app/theme/app_palette.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/repositories/wallet_repository.dart';
 import 'package:crypto_wallet_demo/injection/service_locator.dart';
 import 'package:flutter/material.dart';
@@ -149,28 +150,34 @@ class _BackupSeedPageState extends State<BackupSeedPage> {
       _mnemonicWords.isNotEmpty;
 
   Widget _buildSeedGrid() {
+    final palette = AppPalette.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? AppColors.surfaceLight.withValues(alpha: 0.6)
-            : AppColors.surface.withValues(alpha: 0.6),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+        border: Border.all(color: palette.border),
       ),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: List.generate(_mnemonicWords.length, (index) {
-          return _buildWordChip(index + 1, _mnemonicWords[index]);
-        }),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final chipWidth = (constraints.maxWidth - 10) / 2;
+          return Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: List.generate(_mnemonicWords.length, (index) {
+              return SizedBox(
+                width: chipWidth,
+                child: _buildWordChip(index + 1, _mnemonicWords[index]),
+              );
+            }),
+          );
+        },
       ),
     );
   }
 
   Widget _buildWordChip(int number, String word) {
     return Container(
-      width: 120,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),

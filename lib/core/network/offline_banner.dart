@@ -1,3 +1,4 @@
+import 'package:crypto_wallet_demo/app/theme/app_palette.dart';
 import 'package:crypto_wallet_demo/core/network/connectivity_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,7 @@ class OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return BlocBuilder<ConnectivityCubit, ConnectivityState>(
       buildWhen: (a, b) =>
           a.shouldShowOfflineBanner != b.shouldShowOfflineBanner ||
@@ -17,21 +19,25 @@ class OfflineBanner extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return Material(
-          color: Colors.orange.shade900,
+          color: palette.offlineBannerBackground,
           child: SafeArea(
             bottom: false,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
-                  const Icon(Icons.wifi_off, color: Colors.white, size: 20),
+                  Icon(
+                    Icons.wifi_off,
+                    color: palette.offlineBannerForeground,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'No internet connection. Some actions are unavailable.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
+                            color: palette.offlineBannerForeground,
+                            fontWeight: FontWeight.w600,
                           ),
                     ),
                   ),

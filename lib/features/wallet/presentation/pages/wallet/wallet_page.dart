@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:crypto_wallet_demo/app/theme/app_colors.dart';
+import 'package:crypto_wallet_demo/app/theme/app_palette.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/entities/chain_config.dart';
 import 'package:crypto_wallet_demo/features/wallet/domain/entities/transaction.dart';
 import 'package:crypto_wallet_demo/features/wallet/presentation/bloc/chain_bloc.dart';
@@ -32,6 +33,7 @@ class _WalletPageState extends State<WalletPage> {
 
   @override
   Widget build(BuildContext context) {
+    final padding = context.screenPadding;
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Wallet'),
@@ -45,7 +47,7 @@ class _WalletPageState extends State<WalletPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: EdgeInsets.symmetric(horizontal: padding),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -77,6 +79,7 @@ class _WalletPageState extends State<WalletPage> {
       child: BlocSelector<ChainBloc, ChainState, String>(
         selector: (s) => (s.selectedChain ?? ChainConfig.sepolia).name,
         builder: (context, name) {
+          final palette = AppPalette.of(context);
           return ChoiceChip(
             label: Row(
               mainAxisSize: MainAxisSize.min,
@@ -94,10 +97,10 @@ class _WalletPageState extends State<WalletPage> {
               ],
             ),
             selected: true,
-            selectedColor: AppColors.primary.withValues(alpha: 0.15),
-            labelStyle: const TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w500,
+            selectedColor: AppColors.primary.withValues(alpha: 0.14),
+            labelStyle: TextStyle(
+              color: palette.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
             onSelected: (_) => GoRouter.of(context).go('/home/chains'),
           );
@@ -234,16 +237,15 @@ class _WalletPageState extends State<WalletPage> {
           a.currentBalance != b.currentBalance ||
           a.selectedChain?.chainId != b.selectedChain?.chainId,
       builder: (context, state) {
+        final palette = AppPalette.of(context);
         final chain = state.selectedChain ?? ChainConfig.sepolia;
         final bal = state.currentBalance ?? '—';
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.surfaceLight.withValues(alpha: 0.5)
-                : AppColors.surface.withValues(alpha: 0.4),
+            color: palette.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
+            border: Border.all(color: palette.border),
           ),
           child: Row(
             children: [
@@ -297,6 +299,7 @@ class _WalletPageState extends State<WalletPage> {
   Widget _buildTransactionSection(BuildContext context) {
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
+        final palette = AppPalette.of(context);
         if (state.status == TransactionFlowStatus.loading) {
           return const Center(
             child: Padding(
@@ -310,20 +313,14 @@ class _WalletPageState extends State<WalletPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.surfaceLight.withValues(alpha: 0.5)
-                  : AppColors.surface.withValues(alpha: 0.4),
+              color: palette.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: palette.border),
             ),
             child: Text(
               state.errorMessage ?? 'No recent transactions for this address.',
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: Theme.of(context).textTheme.bodyMedium,
             ),
           );
         }
@@ -331,11 +328,9 @@ class _WalletPageState extends State<WalletPage> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.surfaceLight.withValues(alpha: 0.5)
-                : AppColors.surface.withValues(alpha: 0.4),
+            color: palette.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.2)),
+            border: Border.all(color: palette.border),
           ),
           child: Column(
             children: [
@@ -479,6 +474,7 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -486,11 +482,9 @@ class _QuickAction extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? AppColors.surfaceLight.withValues(alpha: 0.6)
-                : AppColors.surface.withValues(alpha: 0.6),
+            color: palette.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.15)),
+            border: Border.all(color: palette.border),
           ),
           child: Column(
             children: [
