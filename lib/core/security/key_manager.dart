@@ -161,9 +161,7 @@ class KeyManager {
 
   void purgeMnemonic() {
     if (_mnemonic != null) {
-      _mnemonic = String.fromCharCodes(
-        Uint8List(_mnemonic!.length),
-      );
+      _mnemonic = String.fromCharCodes(Uint8List(_mnemonic!.length));
       _mnemonic = null;
     }
   }

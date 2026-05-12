@@ -2,7 +2,9 @@
 
 class MnemonicGenerationException implements Exception {
   final String message;
-  const MnemonicGenerationException([this.message = 'Failed to generate mnemonic']);
+  const MnemonicGenerationException([
+    this.message = 'Failed to generate mnemonic',
+  ]);
   @override
   String toString() => 'MnemonicGenerationException: $message';
 }
@@ -55,7 +57,8 @@ class ChainNotSupportedException implements Exception {
   final String chainId;
   const ChainNotSupportedException(this.chainId);
   @override
-  String toString() => 'ChainNotSupportedException: Chain $chainId is not supported';
+  String toString() =>
+      'ChainNotSupportedException: Chain $chainId is not supported';
 }
 
 class BiometricException implements Exception {

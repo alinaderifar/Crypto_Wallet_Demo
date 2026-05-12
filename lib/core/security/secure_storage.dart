@@ -19,11 +19,12 @@ class SecureStorageImpl implements SecureStorage {
   final FlutterSecureStorage _storage;
 
   SecureStorageImpl({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            FlutterSecureStorage(
-              iOptions: _iosOptions,
-              aOptions: _androidOptions,
-            );
+    : _storage =
+          storage ??
+          FlutterSecureStorage(
+            iOptions: _iosOptions,
+            aOptions: _androidOptions,
+          );
 
   @override
   Future<void> write({required String key, required String value}) async {
@@ -63,9 +64,6 @@ class SecureStorageImpl implements SecureStorage {
   }
 
   Future<void> deleteAll() async {
-    await _storage.deleteAll(
-      iOptions: _iosOptions,
-      aOptions: _androidOptions,
-    );
+    await _storage.deleteAll(iOptions: _iosOptions, aOptions: _androidOptions);
   }
 }

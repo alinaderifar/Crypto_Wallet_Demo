@@ -36,10 +36,7 @@ class ConnectivityState {
   /// False until the first [checkConnectivity] completes.
   final bool hasChecked;
 
-  const ConnectivityState({
-    required this.online,
-    required this.hasChecked,
-  });
+  const ConnectivityState({required this.online, required this.hasChecked});
 
   factory ConnectivityState.initial() =>
       const ConnectivityState(online: true, hasChecked: false);
