@@ -6,10 +6,8 @@ import 'package:crypto_wallet_demo/core/network/connectivity_reader.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeReader implements ConnectivityReader {
-  _FakeReader({
-    required this.online,
-    Stream<List<ConnectivityResult>>? stream,
-  }) : _stream = stream ?? Stream<List<ConnectivityResult>>.empty();
+  _FakeReader({required this.online, Stream<List<ConnectivityResult>>? stream})
+    : _stream = stream ?? Stream<List<ConnectivityResult>>.empty();
 
   bool online;
   final Stream<List<ConnectivityResult>> _stream;

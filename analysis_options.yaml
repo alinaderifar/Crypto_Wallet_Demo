@@ -1,1 +1,22 @@
+# This file configures the analyzer for the crypto_wallet_demo project.
+# For more info see https://dart.dev/guides/language/analysis-options
+
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  errors:
+    # Treat all lint rules as warnings, not errors
+    unused_import: warning
+    unused_local_variable: warning
+    dead_code: warning
+
+  exclude:
+    - "**/*.freezed.dart"
+    - "**/*.g.dart"
+    - "build/**"
+    - "lib/generated/**"

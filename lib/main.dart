@@ -42,18 +42,10 @@ class CryptoWalletApp extends StatelessWidget {
         BlocProvider<ConnectivityCubit>.value(
           value: di.sl<ConnectivityCubit>(),
         ),
-        BlocProvider(
-          create: (_) => di.sl<AuthBloc>(),
-        ),
-        BlocProvider(
-          create: (_) => di.sl<WalletBloc>(),
-        ),
-        BlocProvider(
-          create: (_) => di.sl<ChainBloc>(),
-        ),
-        BlocProvider(
-          create: (_) => di.sl<TransactionBloc>(),
-        ),
+        BlocProvider(create: (_) => di.sl<AuthBloc>()),
+        BlocProvider(create: (_) => di.sl<WalletBloc>()),
+        BlocProvider(create: (_) => di.sl<ChainBloc>()),
+        BlocProvider(create: (_) => di.sl<TransactionBloc>()),
       ],
       child: const App(),
     );

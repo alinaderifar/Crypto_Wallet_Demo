@@ -24,7 +24,9 @@ class _UnusedReader implements ConnectivityReader {
 }
 
 void main() {
-  testWidgets('OfflineBanner builds when cubit reports offline', (tester) async {
+  testWidgets('OfflineBanner builds when cubit reports offline', (
+    tester,
+  ) async {
     final cubit = _OfflineTestCubit();
 
     await tester.pumpWidget(
