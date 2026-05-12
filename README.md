@@ -1,6 +1,6 @@
 # Crypto Wallet Demo
 
-A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app structure. It implements real navigation, local persistence, and session routing. **Batch 2** adds BIP-39/BIP-32 address derivation, salted PIN hashing, real RPC reads (balance, fee estimate, tx history where a keyless explorer API exists), and **native EVM sends** (sign + `eth_sendRawTransaction`) on the selected EVM network (Sepolia by default). Treat as a demo, not audited wallet software (see *Current limitations*).
+A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app structure. It implements real navigation, local persistence, session routing, and a thin chain layer on public RPCs. **BIP-39/BIP-32** derivation, salted PIN hashing, connectivity-aware UI, and **native EVM sends** (sign + `eth_sendRawTransaction`) are wired for the selected EVM network (**Sepolia** by default for new wallets). Treat as a demo, not audited wallet software (see *Current limitations*).
 
 **Version:** 0.1.0+1  
 **SDK:** Dart `>=3.8.0 <4.0.0`
@@ -25,6 +25,7 @@ A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app 
 | **Receive** | Address for the **current chain** from `WalletBloc` + `ChainBloc` and copy UI. |
 | **Transaction detail** | Static demo layout; hash can be copied to clipboard. |
 | **Settings** | Sections from the product sketch (language, security, about, etc.); most rows are placeholders except **Log out**. |
+| **Offline** | Global banner when connectivity is unavailable; send is disabled when offline. |
 
 ### Session and routing
 
@@ -34,19 +35,25 @@ A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app 
 
 ### Architecture (high level)
 
-- **State:** `flutter_bloc` — `AuthBloc`, `WalletBloc`, `ChainBloc`, `TransactionBloc`.
+- **State:** `flutter_bloc` — `AuthBloc`, `WalletBloc`, `ChainBloc`, `TransactionBloc`, `ConnectivityCubit`.
 - **Routing:** `go_router` — `/onboarding/*`, `/home/*` (send, receive, chains, settings, transaction detail).
-- **DI:** `get_it` — `lib/injection/service_locator.dart` (repositories, use cases, blocs).
+- **DI:** `get_it` — `lib/injection/service_locator.dart` (repositories, use cases, blocs). **`Hive.initFlutter()`** runs before the wallet box opens.
 - **Local storage:** `hive` / `hive_flutter` for wallet payload and metadata.
-- **Demo crypto:** `encrypt` + `KeyManager` for AES-style encryption of the mnemonic for Hive (not a production KDF); `flutter_secure_storage` is available for future platform-keychain flows.
-- **Networking:** `dio` JSON-RPC to public endpoints for **balance**, **gas price / fee estimate**, **tx list** (Blockscout-compatible API on Sepolia), and **broadcast**; `web3dart` + `http` for signing/sending.
-- **Optional future stack:** `web3dart`, `solana`, `web3modal_flutter`, `local_auth` are declared dependencies; integration is mostly **TODO** in code.
+- **Crypto:** `bip39` / `bip32` / `solana` (HD addresses), `encrypt` + `KeyManager` for AES-style mnemonic encryption in Hive (not a production KDF), salted PIN hash in Hive (`pin_hashing.dart`).
+- **Networking:** `dio` JSON-RPC to public endpoints for **balance**, **gas price / fee estimate**, **tx list** (Blockscout-compatible API on Sepolia), and **broadcast**; `web3dart` + `http` for signing/sending; `connectivity_plus` for reachability.
+- **UI:** `google_fonts` (Inter), `AppTheme` + `AppPalette` for light/dark surfaces and responsive horizontal padding.
+- **Declared but mostly unwired:** `web3modal_flutter` (WalletConnect), `local_auth` (biometrics), `flutter_animate` / `shimmer` / `cached_network_image` (polish).
+
+### Supported networks (in-app)
+
+Sepolia (default for new wallets), Ethereum mainnet, Polygon, Solana mainnet — see `ChainConfig.supportedChains`. Tx history via explorer API is configured for **Sepolia**; other EVM chains may return empty history unless you set `accountExplorerApiBase` on `ChainConfig`.
 
 ### Repository / use-case shape
 
-- **`WalletRepository`** — create/import wallet, accounts, `walletExists`, `isSessionReady`, `markOnboardingComplete`, `deleteWallet`.
-- **`ChainRepository`** — selected chain, supported chains, stub `getBalance` / `sendTransaction` / `getTransactions` / `estimateFee`.
-- **`AuthRepository`** — empty interface + stub impl (reserved for future auth/session work); **auth flows use wallet use cases** (`CreateWallet` / `ImportWallet` from the wallet feature).
+- **`WalletRepository`** — create/import wallet, accounts, `walletExists`, `isSessionReady`, `markOnboardingComplete`, `deleteWallet`, `verifyPin`, `unlockMnemonic`.
+- **`ChainRepository`** — persisted selected chain, supported chains, `getBalance`, `getTransactions`, `estimateFee`, `broadcastSignedEvmTx` (direct `sendTransaction` is not the primary path).
+- **`SendNativeEth`** — build/sign/broadcast native EVM transfer using decrypted mnemonic + selected RPC.
+- **`AuthRepository`** — stub impl (reserved); onboarding auth uses wallet use cases **`CreateWallet`** / **`ImportWallet`**.
 
 ---
 
@@ -54,8 +61,8 @@ A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app 
 
 ```
 lib/
-  app/                 # MaterialApp.router, theme, go_router config
-  core/                # errors, network_info, security (key_manager, secure_storage), types (either)
+  app/                 # MaterialApp.router, theme (AppTheme, AppPalette), go_router
+  core/                # crypto (HD derivation), errors, network (connectivity, offline banner), security, types
   features/
     auth/              # onboarding pages, auth bloc, auth repository stub
     wallet/            # domain (entities, repos, use cases), data, presentation (pages, blocs)
@@ -63,6 +70,8 @@ lib/
     shared/
   injection/           # GetIt registration
   main.dart
+test/                  # unit + widget tests (connectivity, pin hash, either, offline banner)
+.github/workflows/     # CI: analyze, test, Android/iOS/web build
 ```
 
 ---
@@ -76,6 +85,15 @@ flutter run
 
 Use a simulator or device; portrait orientations are preferred in `main.dart`.
 
+### Quality checks
+
+```bash
+flutter analyze
+flutter test
+```
+
+CI (`.github/workflows/ci.yml`) runs analyze, tests with coverage, and release builds for Android, iOS, and web on push/PR.
+
 ---
 
 ## Current limitations (demo honesty)
@@ -84,15 +102,16 @@ Use a simulator or device; portrait orientations are preferred in `main.dart`.
 - **PIN security** uses salted SHA-256 (demo-only); production wallets should use a proper KDF (e.g. Argon2) and platform secure enclaves where available.
 - **Onboarding PIN in `extra`** is convenient for the backup screen but is **not** a production pattern (memory-only routing argument).
 - **Solana native send** is not implemented here (read path + address derivation only).
+- **Activity tab**, **WalletConnect**, **biometrics**, and many **settings** rows remain placeholders.
 - **`web3modal_flutter`** is noted in `pubspec.yaml` as deprecated in favor of Reown AppKit for future production work.
 
-Treat keys and mnemonics as **sensitive** even in a demo; do not use real mainnet funds with placeholder crypto.
+Treat keys and mnemonics as **sensitive** even in a demo; prefer **testnet** funds for experiments and avoid mainnet value you cannot afford to lose.
 
 ---
 
 ## Roadmap (short)
 
-Further work could include Solana transfers, EIP-1559 fee UX, encrypted `extra` / in-memory vault for backup PIN handoff, explorer API keys, and light balance caching.
+Further work could include Solana transfers, EIP-1559 fee UX, encrypted `extra` / in-memory vault for backup PIN handoff, explorer API keys, light balance caching, and wiring WalletConnect / biometrics.
 
 ---
 
