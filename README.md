@@ -92,7 +92,7 @@ flutter analyze
 flutter test
 ```
 
-CI (`.github/workflows/ci.yml`) runs analyze, tests with coverage, and release builds for Android, iOS, and web on push/PR.
+CI (`.github/workflows/ci.yml`) uses **Flutter 3.35.4** (Dart ≥3.8) so it matches `pubspec.yaml` `environment.sdk`. It runs analyze, tests with coverage, and release builds for Android, iOS, and web on push/PR.
 
 ---
 
