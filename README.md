@@ -38,7 +38,7 @@ A **Flutter** demo of a non-custodial, multi-chain **crypto wallet** UI and app 
 - **State:** `flutter_bloc` — `AuthBloc`, `WalletBloc`, `ChainBloc`, `TransactionBloc`, `ConnectivityCubit`.
 - **Routing:** `go_router` — `/onboarding/*`, `/home/*` (send, receive, chains, settings, transaction detail).
 - **DI:** `get_it` — `lib/injection/service_locator.dart` (repositories, use cases, blocs). **`Hive.initFlutter()`** runs before the wallet box opens.
-- **Local storage:** `hive` / `hive_flutter` for wallet payload and metadata.
+- **Local storage:** `hive` / `hive_flutter` for wallet payload and metadata (no `hive_generator`; add it back only if you introduce `@HiveType` adapters and align versions with `freezed` / `analyzer`).
 - **Crypto:** `bip39` / `bip32` / `solana` (HD addresses), `encrypt` + `KeyManager` for AES-style mnemonic encryption in Hive (not a production KDF), salted PIN hash in Hive (`pin_hashing.dart`).
 - **Networking:** `dio` JSON-RPC to public endpoints for **balance**, **gas price / fee estimate**, **tx list** (Blockscout-compatible API on Sepolia), and **broadcast**; `web3dart` + `http` for signing/sending; `connectivity_plus` for reachability.
 - **UI:** `google_fonts` (Inter), `AppTheme` + `AppPalette` for light/dark surfaces and responsive horizontal padding.
